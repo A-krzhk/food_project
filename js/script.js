@@ -203,10 +203,6 @@ window.addEventListener('DOMContentLoaded', () => {
             statusMessage.src = mess.loading;
             form.insertAdjacentElement('afterend', statusMessage);
 
-            const request = new XMLHttpRequest();
-            request.open('POST', 'server.php');
-
-            request.setRequestHeader('Content-type', 'application/json');
             const formData = new FormData(form);
 
             const object = {};
@@ -214,25 +210,29 @@ window.addEventListener('DOMContentLoaded', () => {
                 object[key] = value;
             });
 
-            const json = JSON.stringify(object);
+            fetch('server.php', {
+                method: 'POST',
+                headers: {
+                    'Content-type': 'application/json'
+                },
+                body: JSON.stringify(object)
+            })
+            .then(data => data.text())
+            .then(data => {
+                console.log(data);
+                thanksModal(mess.success);
 
-            request.send(json);
-    // Отслеживаем load (конечную загрузку нашего запроса)
-            request.addEventListener('load', () => {
-                if(request.status === 200) {
-                    console.log(request.response);
-                    thanksModal(mess.success);
-
-                    // очистить форму 
-                    form.reset();
-                    statusMessage.remove();
-
-                } else {
-                    thanksModal(mess.failure);
-                }
-            }); 
+                statusMessage.remove();
+            })
+            .catch(() => {
+                thanksModal(mess.failure);
+            })
+            .finally(() => {
+                form.reset();
+            });
         });
     } 
+
 
     function thanksModal(message) {
         const prevModalDialog = document.querySelector('.modal__dialog');
@@ -256,6 +256,6 @@ window.addEventListener('DOMContentLoaded', () => {
             document.querySelector('.modal__dialog').classList.add('show');
             document.querySelector('.modal__dialog').classList.remove('hide');
             closeModal();
-        }, 4000);
+        }, 2000);
     }
 });
